@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="ttq">
+    <output-path>$PROJECT_DIR$/out/artifacts/ttq</output-path>
+    <properties id="javafx-properties">
+      <options>
+        <option name="appClass" value="" />
+        <option name="description" value="" />
+        <option name="htmlPlaceholderId" value="" />
+        <option name="title" value="q" />
+        <option name="vendor" value="" />
+        <option name="version" value="" />
+      </options>
+    </properties>
+    <root id="root" />
+  </artifact>
+</component>
