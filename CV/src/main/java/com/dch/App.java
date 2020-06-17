@@ -12,6 +12,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class App {
     static {
@@ -25,6 +28,7 @@ public class App {
     private static JLabel secondImageLabel;
     private static JCheckBox faceDetection;
     private static JCheckBox eyeDetection;
+    private static JCheckBox faceCut;
 
 
     private static String frontXMLFile = "D:\\lbpcascade_frontalface_improved.xml";
@@ -52,6 +56,7 @@ public class App {
         faceDetection = new JCheckBox("Распознавание лиц", false);
         faceDetection.setVerticalAlignment(JCheckBox.TOP);
         eyeDetection = new JCheckBox("Распознавание глаз", false);
+        faceCut = new JCheckBox("Вычитание фона", false);
         eyeDetection.setVerticalAlignment(JCheckBox.BOTTOM);
         frame.setSize(400, 400);
         secondFrame.setSize(400, 400);
@@ -67,7 +72,7 @@ public class App {
         jPanel.add(secondImageLabel);
         jPanel.add(eyeDetection);
         jPanel.add(faceDetection);
-
+        jPanel.add(faceCut);
         settingsFrame.add(jPanel);
 
         frame.setVisible(false);
@@ -125,18 +130,39 @@ public class App {
                     if (!webcamMatImage.empty()) {
                         //Ресайз изображений
                         Imgproc.resize(webcamMatImage, webcamMatImage, new Size(426, 240));
-                        Imgproc.cvtColor(webcamMatImage,webcamMatImageGray, Imgproc.COLOR_BGR2GRAY);
+                        Imgproc.cvtColor(webcamMatImage, webcamMatImageGray, Imgproc.COLOR_BGR2GRAY);
 //                        Imgproc.equalizeHist(webcamMatImageGray, webcamMatImageGray);
 //                        Imgproc.equalizeHist(webcamMatImageGray, webcamMatImageGray);
                         clahe.apply(webcamMatImageGray, webcamMatImageGray);
                         //System.out.println("Cam "+i+"\nwidth:"+webcamMatImage.width()+"\nheight:"+webcamMatImage.height()+"\n\n\n\n");
-                        if (faceDetection.isSelected()) {
+                        Optional<Rect> r;
+                        if (faceDetection.isSelected()||faceCut.isSelected()) {
                             if (count == 0) {
                                 //Определение лица (фронт)
                                 cascadeFrontClassifier.detectMultiScale(webcamMatImageGray, faceFrontDetection);
-                                for (Rect rect : faceFrontDetection.toArray()) {
-                                    Imgproc.rectangle(webcamMatImage, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 0, 255), 1);
+                                r = faceFrontDetection.toList().stream().max((o1, o2) -> {
+                                    if (o1.width * o1.height > o2.width * o2.height) {
+                                        return 1;
+                                    } else return -1;
+                                });
+                                if (r.isPresent()){
+                                    //System.out.println("H: "+r.get().height+"           w: "+r.get().width);
                                 }
+                                if (faceCut.isSelected()){
+                                    if (r.isPresent()){
+                                        webcamMatImage = new Mat(webcamMatImage, r.get());
+
+                                        Imgproc.resize(webcamMatImage, webcamMatImage, new Size(480, 480));
+                                    }
+                                }
+                                else {
+                                    if (r.isPresent()) {
+                                        Imgproc.rectangle(webcamMatImage, new Point(r.get().x, r.get().y), new Point(r.get().x + r.get().width, r.get().y + r.get().height), new Scalar(0, 0, 255), 1);
+                                    }
+                                }
+//                                for (Rect rect :  faceFrontDetection.toList().stream()) {
+//                                    Imgproc.rectangle(webcamMatImage, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 0, 255), 1);
+//                                }
                                 count = work;
                             } else {
 
@@ -154,14 +180,32 @@ public class App {
 
                         if (eyeDetection.isSelected()) {
                             if (count == 0)
-                                cascadeEyeClassifier.detectMultiScale(webcamMatImage, eyeDetection_);
-                            for (Rect rect : eyeDetection_.toArray()) {
-                                Imgproc.rectangle(webcamMatImage, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 155, 255), 1);
+                                if (faceCut.isSelected()){
+                                    Imgproc.cvtColor(webcamMatImage, webcamMatImageGray, Imgproc.COLOR_BGR2GRAY);
+                                }
+                                cascadeEyeClassifier.detectMultiScale(webcamMatImageGray, eyeDetection_);
+                                List<Rect> rr = eyeDetection_.toList();
+                                rr.sort((o1, o2) -> {
+                                    if (o1.width * o1.height > o2.width * o2.height) {
+                                        return -1;
+                                    } else return 1;
+                                });
+                            if (rr.size()>0){
+                                Imgproc.rectangle(webcamMatImage, new Point(rr.get(0).x, rr.get(0).y), new Point(rr.get(0).x + rr.get(0).width, rr.get(0).y + rr.get(0).height), new Scalar(0, 155, 255), 1);
                             }
+                            if (rr.size()>1){
+                                Imgproc.rectangle(webcamMatImage, new Point(rr.get(1).x, rr.get(1).y), new Point(rr.get(1).x + rr.get(1).width, rr.get(1).y + rr.get(1).height), new Scalar(0, 155, 255), 1);
+                            }
+
+//                            for (Rect rect : Arrays.stream(eyeDetection_.toArray()).sorted()) {
+//                                Imgproc.rectangle(webcamMatImage, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 155, 255), 1);
+//                            }
                         }
 
 
-                        Imgproc.resize(webcamMatImage, webcamMatImage, new Size(640, 480));
+                        if (!faceCut.isSelected()){
+                            Imgproc.resize(webcamMatImage, webcamMatImage, new Size(640, 480));
+                        }
                         tempImage = imageProcessor.toBufferedImage(webcamMatImage);
                         ImageIcon imageIcon = new ImageIcon(tempImage, "Captured video");
                         jl.setIcon(imageIcon);
@@ -175,7 +219,7 @@ public class App {
                     }
                 }
             } else {
-                System.out.println("Couldn't open capture");
+                System.out.println("Couldn't open capture " + i + " camera");
             }
         }
     }
