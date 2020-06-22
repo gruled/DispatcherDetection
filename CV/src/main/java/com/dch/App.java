@@ -160,6 +160,7 @@ public class App {
                                         Imgproc.rectangle(webcamMatImage, new Point(r.get().x, r.get().y), new Point(r.get().x + r.get().width, r.get().y + r.get().height), new Scalar(0, 0, 255), 1);
                                     }
                                 }
+                                //ates
 //                                for (Rect rect :  faceFrontDetection.toList().stream()) {
 //                                    Imgproc.rectangle(webcamMatImage, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 0, 255), 1);
 //                                }
