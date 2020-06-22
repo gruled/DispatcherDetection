@@ -31,10 +31,10 @@ public class App {
     private static JCheckBox faceCut;
 
 
-    private static String frontXMLFile = "D:\\lbpcascade_frontalface_improved.xml";
-    private static String profileXMLFile = "D:\\lbpcascade_profileface.xml";
-    private static String eyeXMLFile = "D:\\haarcascade_eye_tree_eyeglasses.xml";
-    private static String rightEyeXMLFile = "D:\\haarcascade_lefteye_2splits.xml";
+    private static String frontXMLFile = "files/lbpcascade_frontalface_improved.xml";
+    private static String profileXMLFile = "files/lbpcascade_profileface.xml";
+    private static String eyeXMLFile = "files/haarcascade_eye_tree_eyeglasses.xml";
+    private static String rightEyeXMLFile = "files/haarcascade_lefteye_2splits.xml";
 
     public static void main(String[] args) {
         App app = new App();
